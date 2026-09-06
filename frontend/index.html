@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#123b31">
+  <meta name="description" content="Trattoria Bellavista - Administración integral del restaurante">
+  <title>Trattoria Bellavista</title>
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-leaf">✦</div>
+        <div class="brand-name">Trattoria<br><strong>Bellavista</strong></div>
+        <div class="brand-subtitle">CUCINA ITALIANA</div>
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-item active" data-view="mesas"><span class="nav-icon">▱</span><span>Mesas</span></button>
+        <button class="nav-item" data-view="pedidos"><span class="nav-icon">☷</span><span>Pedidos</span></button>
+        <button class="nav-item" data-view="reservas"><span class="nav-icon">□</span><span>Reservas</span></button>
+        <button class="nav-item" data-view="menu"><span class="nav-icon">⋮</span><span>Menú</span></button>
+        <button class="nav-item" data-view="clientes"><span class="nav-icon">◯</span><span>Clientes</span></button>
+        <button class="nav-item" data-view="cocina"><span class="nav-icon">⌂</span><span>Cocina</span></button>
+        <button class="nav-item" data-view="reportes"><span class="nav-icon">▥</span><span>Reportes</span></button>
+        <button class="nav-item" data-view="configuracion"><span class="nav-icon">⚙</span><span>Configuración</span></button>
+      </nav>
+
+      <div class="sidebar-illustration" aria-hidden="true">
+        <svg viewBox="0 0 260 100">
+          <path d="M8 87 C45 50 75 63 102 33 C124 11 159 23 174 47 C195 20 225 37 252 77" />
+          <path d="M14 90 H246" />
+          <path d="M64 88 V57 L79 45 L94 57 V88" />
+          <path d="M185 88 V53 L204 38 L222 53 V88" />
+        </svg>
+      </div>
+
+      <div class="sidebar-quote">
+        <em>Buon cibo<br>migliora la vita</em>
+        <div class="italy-flag"><span></span><span></span><span></span></div>
+      </div>
+
+      <div class="connection">
+        <span id="apiDot" class="connection-dot"></span>
+        <div>
+          <strong id="apiStatus">Conectando</strong>
+          <small>FastAPI · PostgreSQL</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <p id="pageEyebrow" class="eyebrow">OPERACIÓN DEL RESTAURANTE</p>
+          <h1 id="pageTitle">Administración de mesas</h1>
+          <p id="pageSubtitle" class="page-subtitle">Controla tu restaurante, crea grandes experiencias.</p>
+        </div>
+
+        <div class="header-right">
+          <div class="clock-block">
+            <span id="currentDate"></span>
+            <strong id="currentTime"></strong>
+          </div>
+          <div class="manager-card">
+            <div class="manager-avatar">G</div>
+            <div><span>Sesión</span><strong>Gerente</strong></div>
+          </div>
+          <button id="refreshButton" class="button secondary">↻ Actualizar</button>
+          <button id="contextAction" class="button primary">+ Nueva mesa</button>
+        </div>
+      </header>
+
+      <section id="globalStats" class="stats-grid">
+        <article class="stat-card">
+          <div class="stat-icon brown">▱</div>
+          <div><span>Mesas activas</span><strong id="statTotal">0</strong><small>Configuradas</small></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon green">▣</div>
+          <div><span>Libres</span><strong id="statFree">0</strong><small>Disponibles ahora</small></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon red">●</div>
+          <div><span>Ocupadas</span><strong id="statOccupied">0</strong><small>Con comensales</small></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon gold">⌂</div>
+          <div><span>Pedidos activos</span><strong id="statOrders">0</strong><small>En operación</small></div>
+        </article>
+      </section>
+
+      <!-- MESAS -->
+      <section id="viewMesas" class="view active">
+        <div class="workspace-grid">
+          <section class="floor-card">
+            <div class="floor-toolbar">
+              <div class="legend">
+                <span><i class="legend-dot libre"></i>Libre</span>
+                <span><i class="legend-dot ocupada"></i>Ocupada</span>
+                <span><i class="legend-dot reservada"></i>Reservada</span>
+                <span><i class="legend-dot fuera"></i>Fuera de servicio</span>
+              </div>
+
+              <div class="floor-filters">
+                <button id="layoutEditButton" class="mini-button">Editar plano</button>
+                <select id="areaFilter" class="control">
+                  <option value="TODAS">Todas las áreas</option>
+                  <option value="SALON">Salón principal</option>
+                  <option value="TERRAZA">Terraza</option>
+                  <option value="VIP">Sala privada</option>
+                  <option value="BAR">Bar</option>
+                  <option value="OTRA">Otra</option>
+                </select>
+                <input id="tableSearch" class="control search" type="search" placeholder="Buscar mesa...">
+              </div>
+            </div>
+
+            <div id="layoutModeBanner" class="layout-banner hidden">
+              Modo edición activo: arrastra una mesa y su posición se guardará en PostgreSQL.
+            </div>
+
+            <div id="restaurantMap" class="restaurant-map">
+              <div class="zone terrace"><div class="zone-title">TERRAZA</div><div class="umbrella u1"></div><div class="umbrella u2"></div><i class="plant p1"></i><i class="plant p2"></i></div>
+              <div class="zone dining"><div class="zone-title">SALÓN PRINCIPAL</div><div class="rug"></div><i class="plant p3"></i><i class="plant p4"></i></div>
+              <div class="zone bar"><div class="zone-title">BAR</div><div class="bar-counter"></div><span class="bar-stool s1"></span><span class="bar-stool s2"></span><span class="bar-stool s3"></span><span class="bar-stool s4"></span></div>
+              <div class="zone reception"><div class="zone-title">RECEPCIÓN</div><div class="host-desk"></div></div>
+              <div class="zone kitchen"><div class="zone-title">COCINA</div><div class="kitchen-counter k1"></div><div class="kitchen-counter k2"></div><div class="kitchen-counter k3"></div></div>
+              <div class="zone vip"><div class="zone-title">SALA PRIVADA · VIP</div></div>
+              <div class="entrance-label">ENTRADA</div>
+              <div id="tableLayer" class="table-layer"></div>
+            </div>
+          </section>
+
+          <aside class="details-column">
+            <section id="selectedTableCard" class="selected-card">
+              <div class="selected-hero"><div><span class="eyebrow light">SELECCIÓN ACTUAL</span><h2>Selecciona una mesa</h2><p>Haz clic sobre una mesa del plano para gestionarla.</p></div></div>
+              <div class="selected-empty"><div class="empty-table-icon">▱</div><strong>Plano interactivo</strong><span>La información de la mesa aparecerá aquí.</span></div>
+            </section>
+
+            <section class="recent-card">
+              <div class="card-heading"><h3>Pedidos recientes</h3><button class="text-button" data-go-view="pedidos">Ver todos</button></div>
+              <div id="recentOrders" class="recent-orders"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section id="viewPedidos" class="view">
+        <div class="content-card">
+          <div class="section-heading"><div><p class="eyebrow">SEGUIMIENTO</p><h2>Pedidos del restaurante</h2><p>Estados, totales e historial de atención.</p></div></div>
+          <div class="two-columns">
+            <div><h3 class="column-title">Pedidos activos</h3><div id="activeOrders" class="order-list"></div></div>
+            <div><h3 class="column-title">Historial reciente</h3><div id="orderHistory" class="order-list"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESERVAS -->
+      <section id="viewReservas" class="view">
+        <div class="content-card">
+          <div class="section-toolbar">
+            <div><p class="eyebrow">AGENDA</p><h2>Reservas</h2><p>Gestiona próximas visitas y asignación de mesas.</p></div>
+            <select id="reservationStatusFilter" class="control">
+              <option value="TODAS">Todos los estados</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="CONFIRMADA">Confirmadas</option>
+              <option value="EN_MESA">En mesa</option>
+              <option value="COMPLETADA">Completadas</option>
+              <option value="CANCELADA">Canceladas</option>
+              <option value="NO_ASISTIO">No asistió</option>
+            </select>
+          </div>
+          <div id="reservationSummary" class="mini-stats"></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Fecha y hora</th><th>Cliente</th><th>Mesa</th><th>Personas</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="reservationsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MENU -->
+      <section id="viewMenu" class="view">
+        <div class="content-card">
+          <div class="section-toolbar">
+            <div><p class="eyebrow">CUCINA ITALIANA</p><h2>Menú</h2><p>Catálogo de productos disponible para los pedidos.</p></div>
+            <div id="menuCategories" class="category-tabs">
+              <button class="category-tab active" data-category="TODOS">Todos</button>
+              <button class="category-tab" data-category="ENTRADA">Entradas</button>
+              <button class="category-tab" data-category="PLATO_FUERTE">Platos fuertes</button>
+              <button class="category-tab" data-category="BEBIDA">Bebidas</button>
+              <button class="category-tab" data-category="POSTRE">Postres</button>
+              <button class="category-tab" data-category="OTRO">Otros</button>
+            </div>
+          </div>
+          <div id="menuGrid" class="menu-grid"></div>
+        </div>
+      </section>
+
+      <!-- CLIENTES -->
+      <section id="viewClientes" class="view">
+        <div class="content-card">
+          <div class="section-toolbar">
+            <div><p class="eyebrow">RELACIONES</p><h2>Clientes</h2><p>Base de clientes para reservas y seguimiento.</p></div>
+            <input id="clientSearch" class="control search-wide" type="search" placeholder="Buscar cliente...">
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody id="clientsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- COCINA -->
+      <section id="viewCocina" class="view">
+        <div class="content-card">
+          <div class="section-heading"><div><p class="eyebrow">KITCHEN DISPLAY</p><h2>Comandas de cocina</h2><p>Flujo operativo de preparación y despacho.</p></div></div>
+          <div class="kitchen-board">
+            <div class="kitchen-column"><div class="kitchen-column-title pending"><span>Pendientes</span><b id="kitchenPendingCount">0</b></div><div id="kitchenPending" class="kitchen-list"></div></div>
+            <div class="kitchen-column"><div class="kitchen-column-title preparing"><span>En preparación</span><b id="kitchenPreparingCount">0</b></div><div id="kitchenPreparing" class="kitchen-list"></div></div>
+            <div class="kitchen-column"><div class="kitchen-column-title ready"><span>Listos</span><b id="kitchenReadyCount">0</b></div><div id="kitchenReady" class="kitchen-list"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTES -->
+      <section id="viewReportes" class="view">
+        <div class="reports-grid">
+          <article class="report-metric"><span>Ventas de hoy</span><strong id="reportSales">$0</strong><small>Pedidos pagados</small></article>
+          <article class="report-metric"><span>Pedidos hoy</span><strong id="reportOrders">0</strong><small>Órdenes registradas</small></article>
+          <article class="report-metric"><span>Ticket promedio</span><strong id="reportTicket">$0</strong><small>Valor por pedido pagado</small></article>
+          <article class="report-metric"><span>Reservas hoy</span><strong id="reportReservations">0</strong><small>Activas para hoy</small></article>
+        </div>
+
+        <div class="reports-layout">
+          <section class="content-card">
+            <div class="section-heading"><p class="eyebrow">RENDIMIENTO</p><h2>Productos más vendidos</h2></div>
+            <div id="productRanking" class="ranking"></div>
+          </section>
+
+          <section class="content-card highlight-card">
+            <p class="eyebrow">DESTACADOS</p>
+            <div class="highlight-block"><span>Mesa más utilizada</span><strong id="topTable">Sin datos</strong></div>
+            <div class="highlight-block"><span>Producto más vendido</span><strong id="topProduct">Sin datos</strong></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- CONFIGURACION -->
+      <section id="viewConfiguracion" class="view">
+        <div class="config-layout">
+          <section class="content-card">
+            <div class="section-heading"><p class="eyebrow">IDENTIDAD</p><h2>Configuración del restaurante</h2><p>Información general almacenada en PostgreSQL.</p></div>
+
+            <form id="configForm" class="form-grid">
+              <label class="field"><span>Nombre</span><input id="configName" required maxlength="150"></label>
+              <label class="field"><span>Especialidad</span><input id="configSpecialty" required maxlength="120"></label>
+              <label class="field"><span>Moneda</span><input id="configCurrency" required maxlength="10"></label>
+              <label class="field"><span>Ciudad</span><input id="configCity" maxlength="120"></label>
+              <label class="field"><span>Teléfono</span><input id="configPhone" maxlength="40"></label>
+              <label class="field"><span>Dirección</span><input id="configAddress" maxlength="200"></label>
+              <label class="field full-span"><span>Horario</span><input id="configHours" maxlength="160" placeholder="Lun-Dom 12:00 - 23:00"></label>
+              <div class="full-span form-actions"><button class="button primary" type="submit">Guardar configuración</button></div>
+            </form>
+          </section>
+
+          <aside class="brand-preview">
+            <span class="brand-preview-leaf">✦</span>
+            <small>CUCINA ITALIANA</small>
+            <h2 id="configPreviewName">Trattoria Bellavista</h2>
+            <p id="configPreviewSpecialty">Cucina Italiana</p>
+            <div class="preview-line"></div>
+            <span id="configPreviewCity">Bogotá</span>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MESA DIALOG -->
+  <dialog id="mesaDialog" class="dialog">
+    <form id="mesaForm">
+      <div class="dialog-header"><div><p class="eyebrow">CONFIGURACIÓN</p><h2 id="mesaDialogTitle">Nueva mesa</h2></div><button type="button" class="icon-button dialog-close">×</button></div>
+      <input id="mesaId" type="hidden">
+      <label class="field"><span>Número</span><input id="mesaNumero" type="number" min="1" required></label>
+      <label class="field"><span>Capacidad</span><input id="mesaCapacidad" type="number" min="1" max="50" required></label>
+      <label class="field"><span>Ubicación</span><input id="mesaUbicacion" maxlength="100"></label>
+      <div class="dialog-actions"><button type="button" class="button secondary dialog-cancel">Cancelar</button><button class="button primary" type="submit">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <!-- PRODUCT DIALOG -->
+  <dialog id="productDialog" class="dialog">
+    <form id="productForm">
+      <div class="dialog-header"><div><p class="eyebrow">MENÚ</p><h2 id="productDialogTitle">Nuevo producto</h2></div><button type="button" class="icon-button dialog-close">×</button></div>
+      <input id="productId" type="hidden">
+      <label class="field"><span>Nombre</span><input id="productName" required minlength="2" maxlength="150"></label>
+      <label class="field"><span>Descripción</span><textarea id="productDescription"></textarea></label>
+      <div class="form-grid compact-grid">
+        <label class="field"><span>Precio</span><input id="productPrice" type="number" min="1" step="100" required></label>
+        <label class="field"><span>Categoría</span><select id="productCategory" required><option value="ENTRADA">Entrada</option><option value="PLATO_FUERTE">Plato fuerte</option><option value="BEBIDA">Bebida</option><option value="POSTRE">Postre</option><option value="OTRO">Otro</option></select></label>
+      </div>
+      <label class="toggle-field"><input id="productAvailable" type="checkbox" checked><span>Producto disponible para pedidos</span></label>
+      <div class="dialog-actions"><button type="button" class="button secondary dialog-cancel">Cancelar</button><button class="button primary" type="submit">Guardar producto</button></div>
+    </form>
+  </dialog>
+
+  <!-- CLIENT DIALOG -->
+  <dialog id="clientDialog" class="dialog">
+    <form id="clientForm">
+      <div class="dialog-header"><div><p class="eyebrow">CLIENTES</p><h2 id="clientDialogTitle">Nuevo cliente</h2></div><button type="button" class="icon-button dialog-close">×</button></div>
+      <input id="clientId" type="hidden">
+      <label class="field"><span>Nombre</span><input id="clientName" required minlength="2" maxlength="150"></label>
+      <label class="field"><span>Teléfono</span><input id="clientPhone" maxlength="30"></label>
+      <label class="field"><span>Correo</span><input id="clientEmail" type="email" maxlength="150"></label>
+      <label class="field"><span>Observaciones</span><textarea id="clientNotes"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="button secondary dialog-cancel">Cancelar</button><button class="button primary" type="submit">Guardar cliente</button></div>
+    </form>
+  </dialog>
+
+  <!-- RESERVATION DIALOG -->
+  <dialog id="reservationDialog" class="dialog">
+    <form id="reservationForm">
+      <div class="dialog-header"><div><p class="eyebrow">RESERVAS</p><h2 id="reservationDialogTitle">Nueva reserva</h2></div><button type="button" class="icon-button dialog-close">×</button></div>
+      <input id="reservationId" type="hidden">
+      <label class="field"><span>Cliente</span><select id="reservationClient" required></select></label>
+      <div class="form-grid compact-grid">
+        <label class="field"><span>Mesa</span><select id="reservationTable" required></select></label>
+        <label class="field"><span>Personas</span><input id="reservationPeople" type="number" min="1" max="50" value="2" required></label>
+      </div>
+      <label class="field"><span>Fecha y hora</span><input id="reservationDateTime" type="datetime-local" required></label>
+      <label class="field"><span>Observaciones</span><textarea id="reservationNotes"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="button secondary dialog-cancel">Cancelar</button><button class="button primary" type="submit">Guardar reserva</button></div>
+    </form>
+  </dialog>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
