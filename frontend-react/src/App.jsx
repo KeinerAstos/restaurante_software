@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Sidebar from './components/Sidebar'
 import MenuPage from './pages/MenuPage'
 import ClientesPage from './pages/ClientesPage'
+import MesasPage from './pages/MesasPage'
 import { api } from './services/api'
 
 const informacionVistas = {
@@ -85,34 +86,32 @@ function App() {
           </div>
         </header>
 
-        {vistaActual === 'menu' ? (
-          <MenuPage />
-        ) : vistaActual === 'clientes' ? (
-          <ClientesPage />
-        ) : (
-          <section className="content-card">
-            {cargando ? (
-              <p>Consultando el backend...</p>
-            ) : conectado ? (
-              <>
-                <h2>{informacion.titulo}</h2>
-
-                <p>
-                  React está conectado correctamente con FastAPI. En esta
-                  sección construiremos el módulo de {vistaActual}.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2>No fue posible conectar con FastAPI</h2>
-
-                <p>
-                  Verifica que Docker y el backend estén funcionando.
-                </p>
-              </>
-            )}
-          </section>
-        )}
+          {vistaActual === 'mesas' ? (
+    <MesasPage />
+  ) : vistaActual === 'menu' ? (
+    <MenuPage />
+  ) : vistaActual === 'clientes' ? (
+    <ClientesPage />
+  ) : (
+    <section className="content-card">
+      {cargando ? (
+        <p>Consultando el backend...</p>
+      ) : conectado ? (
+        <>
+          <h2>{informacion.titulo}</h2>
+          <p>
+            React está conectado correctamente con FastAPI. En esta
+            sección construiremos el módulo de {vistaActual}.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2>No fue posible conectar con FastAPI</h2>
+          <p>Verifica que Docker y el backend estén funcionando.</p>
+        </>
+      )}
+    </section>
+  )}
       </main>
     </div>
   )
