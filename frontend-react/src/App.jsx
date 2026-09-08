@@ -1,44 +1,107 @@
 import { useEffect, useState } from 'react'
-import './App.css'
+import Sidebar from './components/Sidebar'
+import MenuPage from './pages/MenuPage'
+import { api } from './services/api'
+
+const informacionVistas = {
+  mesas: {
+    titulo: 'Administración de mesas',
+    subtitulo: 'Controla tu restaurante, crea grandes experiencias.',
+  },
+  pedidos: {
+    titulo: 'Gestión de pedidos',
+    subtitulo: 'Consulta y administra los pedidos del restaurante.',
+  },
+  reservas: {
+    titulo: 'Gestión de reservas',
+    subtitulo: 'Organiza las reservas y disponibilidad de las mesas.',
+  },
+  menu: {
+    titulo: 'Menú del restaurante',
+    subtitulo: 'Administra los productos disponibles para los pedidos.',
+  },
+  clientes: {
+    titulo: 'Gestión de clientes',
+    subtitulo: 'Consulta y administra la información de los clientes.',
+  },
+  cocina: {
+    titulo: 'Operación de cocina',
+    subtitulo: 'Gestiona el estado de preparación de los pedidos.',
+  },
+  reportes: {
+    titulo: 'Reportes del restaurante',
+    subtitulo: 'Consulta los indicadores principales de la operación.',
+  },
+  configuracion: {
+    titulo: 'Configuración',
+    subtitulo: 'Administra la información general del restaurante.',
+  },
+}
 
 function App() {
-  const [estado, setEstado] = useState('Consultando backend...')
-  const [error, setError] = useState('')
+  const [vistaActual, setVistaActual] = useState('mesas')
+  const [conectado, setConectado] = useState(false)
+  const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
-    fetch('/health')
-      .then((respuesta) => {
-        if (!respuesta.ok) {
-          throw new Error('El backend respondió con un error')
-        }
-
-        return respuesta.json()
-      })
-      .then((datos) => {
-        setEstado(
-          `${datos.status} - ${datos.application} - versión ${datos.version}`,
-        )
-      })
-      .catch((errorConsulta) => {
-        setError(errorConsulta.message)
-      })
+    api
+      .health()
+      .then(() => setConectado(true))
+      .catch(() => setConectado(false))
+      .finally(() => setCargando(false))
   }, [])
 
+  const informacion = informacionVistas[vistaActual]
+
   return (
-    <main>
-      <h1>Trattoria Bellavista</h1>
-      <h2>Frontend desarrollado con React</h2>
+    <div className="app-shell">
+      <Sidebar
+        vistaActual={vistaActual}
+        cambiarVista={setVistaActual}
+        conectado={conectado}
+      />
 
-      <section>
-        <h3>Estado de conexión con FastAPI</h3>
+      <main className="main-content">
+        <header className="page-header">          <div>
+            <p className="eyebrow">OPERACIÓN DEL RESTAURANTE</p>
+            <h1>{informacion.titulo}</h1>
+            <p className="page-subtitle">{informacion.subtitulo}</p>
+          </div>
 
-        {error ? (
-          <p>Error: {error}</p>
-        ) : (
-          <p>{estado}</p>
-        )}
-      </section>
-    </main>
+      <div className="header-right">            <button
+              type="button"
+              className="button secondary"
+              onClick={() => window.location.reload()}
+            >
+              ↻ Actualizar
+            </button>
+          </div>
+        </header>
+
+{vistaActual === 'menu' ? (
+  <MenuPage />
+) : (
+  <section className="content-card">
+    {cargando ? (
+      <p>Consultando el backend...</p>
+    ) : conectado ? (
+      <>
+        <h2>{informacion.titulo}</h2>
+        <p>
+          React está conectado correctamente con FastAPI. En esta
+          sección construiremos el módulo de {vistaActual}.
+        </p>
+      </>
+    ) : (
+      <>
+        <h2>No fue posible conectar con FastAPI</h2>
+        <p>Verifica que Docker y el backend estén funcionando.</p>
+      </>
+    )}
+  </section>
+)}
+      </main>
+    </div>
   )
 }
 
