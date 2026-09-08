@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import Sidebar from './components/Sidebar'
+import MesasPage from './pages/MesasPage'
 import MenuPage from './pages/MenuPage'
 import ClientesPage from './pages/ClientesPage'
-import MesasPage from './pages/MesasPage'
+import ReservasPage from './pages/ReservasPage'
 import { api } from './services/api'
 
 const informacionVistas = {
@@ -55,6 +56,49 @@ function App() {
 
   const informacion = informacionVistas[vistaActual]
 
+  function mostrarContenido() {
+    if (vistaActual === 'mesas') {
+      return <MesasPage />
+    }
+
+    if (vistaActual === 'reservas') {
+      return <ReservasPage />
+    }
+
+    if (vistaActual === 'menu') {
+      return <MenuPage />
+    }
+
+    if (vistaActual === 'clientes') {
+      return <ClientesPage />
+    }
+
+    return (
+      <section className="content-card">
+        {cargando ? (
+          <p>Consultando el backend...</p>
+        ) : conectado ? (
+          <>
+            <h2>{informacion.titulo}</h2>
+
+            <p>
+              React está conectado correctamente con FastAPI. En esta
+              sección construiremos el módulo de {vistaActual}.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2>No fue posible conectar con FastAPI</h2>
+
+            <p>
+              Verifica que Docker y el backend estén funcionando.
+            </p>
+          </>
+        )}
+      </section>
+    )
+  }
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -66,7 +110,9 @@ function App() {
       <main className="main-content">
         <header className="page-header">
           <div>
-            <p className="eyebrow">OPERACIÓN DEL RESTAURANTE</p>
+            <p className="eyebrow">
+              OPERACIÓN DEL RESTAURANTE
+            </p>
 
             <h1>{informacion.titulo}</h1>
 
@@ -86,32 +132,7 @@ function App() {
           </div>
         </header>
 
-          {vistaActual === 'mesas' ? (
-    <MesasPage />
-  ) : vistaActual === 'menu' ? (
-    <MenuPage />
-  ) : vistaActual === 'clientes' ? (
-    <ClientesPage />
-  ) : (
-    <section className="content-card">
-      {cargando ? (
-        <p>Consultando el backend...</p>
-      ) : conectado ? (
-        <>
-          <h2>{informacion.titulo}</h2>
-          <p>
-            React está conectado correctamente con FastAPI. En esta
-            sección construiremos el módulo de {vistaActual}.
-          </p>
-        </>
-      ) : (
-        <>
-          <h2>No fue posible conectar con FastAPI</h2>
-          <p>Verifica que Docker y el backend estén funcionando.</p>
-        </>
-      )}
-    </section>
-  )}
+        {mostrarContenido()}
       </main>
     </div>
   )
