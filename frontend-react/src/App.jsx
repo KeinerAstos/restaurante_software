@@ -7,6 +7,7 @@ import MenuPage from './pages/MenuPage'
 import CocinaPage from './pages/CocinaPage'
 import ClientesPage from './pages/ClientesPage'
 import ReportesPage from './pages/ReportesPage'
+import ConfiguracionPage from './pages/ConfiguracionPage'
 import { api } from './services/api'
 
 const informacionVistas = {
@@ -91,10 +92,14 @@ return <MesasPage cambiarVista={setVistaActual} />    }
     if (vistaActual === 'cocina') {
       return <CocinaPage />
     }
-    
-    if (vistaActual === 'reportes') {
-      return <ReportesPage />
-    }
+
+if (vistaActual === 'reportes') {
+  return <ReportesPage />
+}
+
+if (vistaActual === 'configuracion') {
+  return <ConfiguracionPage />
+}
 
     return (
       <section className="content-card">

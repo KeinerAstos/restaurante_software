@@ -263,3 +263,19 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:3px;font:500 clamp(31px,3.3vw,48px)/1 G
     grid-template-columns: 1fr 75px;
   }
 }
+
+.form-success {
+  padding: 9px 11px;
+  border: 1px solid #b9dec8;
+  border-radius: 8px;
+  color: #1a7145;
+  background: #e8f6ed;
+  font-size: 11px;
+}
+
+.brand-preview > span {
+  display: block;
+  margin-top: 6px;
+  color: #d8c59f;
+  font-size: 11px;
+}
