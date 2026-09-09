@@ -60,7 +60,6 @@ function PedidosPage() {
   const [mesas, setMesas] = useState([])
   const [pedidoSeleccionadoId, setPedidoSeleccionadoId] =
     useState(null)
-
   const [mostrarDetalle, setMostrarDetalle] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [actualizandoId, setActualizandoId] = useState(null)
@@ -118,7 +117,10 @@ function PedidosPage() {
     setPedidos((pedidosActuales) =>
       pedidosActuales.map((pedido) =>
         pedido.id === pedidoActualizado.id
-          ? pedidoActualizado
+          ? {
+              ...pedido,
+              ...pedidoActualizado,
+            }
           : pedido,
       ),
     )
@@ -130,7 +132,6 @@ function PedidosPage() {
         window.alert(
           'No se puede cerrar el pedido porque todavía no tiene productos.',
         )
-
         return
       }
 
@@ -140,29 +141,23 @@ function PedidosPage() {
         } por ${formatearDinero(pedido.total)}?`,
       )
 
-      if (!confirmarPago) {
-        return
-      }
+      if (!confirmarPago) return
     }
 
     try {
       setActualizandoId(pedido.id)
 
-      const pedidoActualizado =
-        await api.changeOrderStatus(
-          pedido.id,
-          nuevoEstado,
-        )
+      await api.changeOrderStatus(
+        pedido.id,
+        nuevoEstado,
+      )
 
-      actualizarPedidoEnLista(pedidoActualizado)
+      // Consulta nuevamente los datos reales del backend.
+      await cargarDatos()
 
       if (nuevoEstado === 'PAGADO') {
         window.alert(
-          `Pago registrado correctamente.\nPedido #${
-            pedido.id
-          }\nTotal: ${formatearDinero(
-            pedidoActualizado.total,
-          )}`,
+          `El pedido #${pedido.id} fue pagado correctamente.`,
         )
       }
     } catch (err) {
@@ -181,9 +176,7 @@ function PedidosPage() {
       `¿Deseas cancelar el pedido #${pedido.id}?`,
     )
 
-    if (!confirmado) {
-      return
-    }
+    if (!confirmado) return
 
     await cambiarEstado(pedido, 'CANCELADO')
   }
@@ -194,8 +187,8 @@ function PedidosPage() {
       new Date(pedidoA.created_at).getTime(),
   )
 
-  const pedidosActivos = pedidosOrdenados.filter(
-    (pedido) => estadosActivos.includes(pedido.estado),
+  const pedidosActivos = pedidosOrdenados.filter((pedido) =>
+    estadosActivos.includes(pedido.estado),
   )
 
   const historialPedidos = pedidosOrdenados.filter(
@@ -203,17 +196,11 @@ function PedidosPage() {
   )
 
   function renderizarPedido(pedido, permitirAcciones) {
-    const proximoEstado =
-      siguienteEstado[pedido.estado]
-
-    const actualizando =
-      actualizandoId === pedido.id
+    const proximoEstado = siguienteEstado[pedido.estado]
+    const actualizando = actualizandoId === pedido.id
 
     return (
-      <article
-        className="order-card"
-        key={pedido.id}
-      >
+      <article className="order-card" key={pedido.id}>
         <span className="number">
           #{pedido.id}
         </span>
@@ -224,11 +211,8 @@ function PedidosPage() {
           </strong>
 
           <span>
-            {nombresEstados[pedido.estado] ||
-              pedido.estado}
-
+            {nombresEstados[pedido.estado] || pedido.estado}
             {' · '}
-
             {formatearFecha(pedido.created_at)}
           </span>
         </span>
@@ -238,7 +222,7 @@ function PedidosPage() {
         </span>
 
         <div className="order-card-actions">
-          {permitirAcciones && (
+          {permitirAcciones ? (
             <>
               <button
                 type="button"
@@ -255,17 +239,12 @@ function PedidosPage() {
                   className="action-chip"
                   disabled={actualizando}
                   onClick={() =>
-                    cambiarEstado(
-                      pedido,
-                      proximoEstado,
-                    )
+                    cambiarEstado(pedido, proximoEstado)
                   }
                 >
                   {actualizando
                     ? 'Actualizando...'
-                    : textoSiguienteEstado[
-                        pedido.estado
-                      ]}
+                    : textoSiguienteEstado[pedido.estado]}
                 </button>
               )}
 
@@ -273,16 +252,12 @@ function PedidosPage() {
                 type="button"
                 className="action-chip danger"
                 disabled={actualizando}
-                onClick={() =>
-                  cancelarPedido(pedido)
-                }
+                onClick={() => cancelarPedido(pedido)}
               >
                 Cancelar
               </button>
             </>
-          )}
-
-          {!permitirAcciones && (
+          ) : (
             <span className="action-disabled">
               Pedido finalizado
             </span>
@@ -304,9 +279,7 @@ function PedidosPage() {
     return (
       <div className="empty-state">
         <p>
-          No fue posible consultar los pedidos:
-          {' '}
-          {error}
+          No fue posible consultar los pedidos: {error}
         </p>
 
         <button
@@ -329,9 +302,7 @@ function PedidosPage() {
               SEGUIMIENTO
             </p>
 
-            <h2>
-              Pedidos del restaurante
-            </h2>
+            <h2>Pedidos del restaurante</h2>
 
             <p>
               Estados, totales e historial de atención.
@@ -341,9 +312,12 @@ function PedidosPage() {
           <button
             type="button"
             className="button secondary"
+            disabled={cargando}
             onClick={cargarDatos}
           >
-            ↻ Actualizar
+            {cargando
+              ? 'Actualizando...'
+              : '↻ Actualizar'}
           </button>
         </div>
 
@@ -356,10 +330,7 @@ function PedidosPage() {
             <div className="order-list">
               {pedidosActivos.length > 0 ? (
                 pedidosActivos.map((pedido) =>
-                  renderizarPedido(
-                    pedido,
-                    true,
-                  ),
+                  renderizarPedido(pedido, true),
                 )
               ) : (
                 <div className="empty-state">
@@ -379,10 +350,7 @@ function PedidosPage() {
                 historialPedidos
                   .slice(0, 20)
                   .map((pedido) =>
-                    renderizarPedido(
-                      pedido,
-                      false,
-                    ),
+                    renderizarPedido(pedido, false),
                   )
               ) : (
                 <div className="empty-state">
@@ -394,16 +362,13 @@ function PedidosPage() {
         </div>
       </section>
 
-      {mostrarDetalle &&
-        pedidoSeleccionadoId && (
-          <PedidoDialog
-            pedidoId={pedidoSeleccionadoId}
-            cerrar={cerrarDetalle}
-            pedidoActualizado={
-              actualizarPedidoEnLista
-            }
-          />
-        )}
+      {mostrarDetalle && pedidoSeleccionadoId && (
+        <PedidoDialog
+          pedidoId={pedidoSeleccionadoId}
+          cerrar={cerrarDetalle}
+          pedidoActualizado={actualizarPedidoEnLista}
+        />
+      )}
     </>
   )
 }

@@ -4,6 +4,7 @@ import MesasPage from './pages/MesasPage'
 import PedidosPage from './pages/PedidosPage'
 import ReservasPage from './pages/ReservasPage'
 import MenuPage from './pages/MenuPage'
+import CocinaPage from './pages/CocinaPage'
 import ClientesPage from './pages/ClientesPage'
 import { api } from './services/api'
 
@@ -82,8 +83,8 @@ return <MesasPage cambiarVista={setVistaActual} />    }
       return <MenuPage cambiarVista={setVistaActual} />
     }
 
-    if (vistaActual === 'clientes') {
-      return <ClientesPage cambiarVista={setVistaActual} />
+    if (vistaActual === 'cocina') {
+      return <CocinaPage />
     }
 
     return (
