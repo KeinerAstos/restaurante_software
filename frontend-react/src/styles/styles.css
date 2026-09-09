@@ -103,3 +103,163 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:3px;font:500 clamp(31px,3.3vw,48px)/1 G
     grid-template-columns: 1fr;
   }
 }
+
+.order-card-actions {
+  grid-column: 2 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.order-card-info {
+  min-width: 0;
+}
+
+.action-disabled {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Modal del detalle del pedido */
+.dialog.order-dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-width: 680px;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: #fffdf8;
+  box-shadow: 0 24px 70px rgba(15, 30, 25, 0.3);
+}
+
+.dialog.order-dialog::backdrop {
+  background: rgba(15, 30, 25, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.dialog.order-dialog .dialog-form {
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  padding: 26px;
+  overflow-y: auto;
+}
+
+.dialog.order-dialog .dialog-header {
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dialog.order-dialog .dialog-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font: 500 30px/1.1 Georgia, "Times New Roman", serif;
+}
+
+.dialog.order-dialog .dialog-header .eyebrow {
+  margin-bottom: 7px;
+}
+
+.dialog.order-dialog .order-head {
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.dialog.order-dialog .order-head strong {
+  color: var(--ink);
+  font: 500 21px Georgia, "Times New Roman", serif;
+}
+
+.dialog.order-dialog .order-total {
+  color: var(--forest);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.dialog.order-dialog .items-mini {
+  max-height: 260px;
+  margin: 0 0 18px;
+  padding: 12px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf8f3;
+}
+
+.dialog.order-dialog .items-mini .empty-state {
+  border: 0;
+  background: transparent;
+}
+
+.dialog.order-dialog .item-mini {
+  padding: 10px 4px;
+}
+
+.dialog.order-dialog .add-form {
+  margin-top: 0;
+  padding: 16px;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.dialog.order-dialog .add-form select,
+.dialog.order-dialog .add-form input,
+.dialog.order-dialog .add-form textarea {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: #fff;
+  font-size: 12px;
+}
+
+.dialog.order-dialog .add-form textarea {
+  min-height: 70px;
+}
+
+.dialog.order-dialog .dialog-actions {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.form-error {
+  padding: 9px 11px;
+  border: 1px solid #e8bdbc;
+  border-radius: 8px;
+  color: #a54043;
+  background: #fff3f1;
+  font-size: 11px;
+}
+
+@media (max-width: 520px) {
+  .dialog.order-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+  }
+
+  .dialog.order-dialog .dialog-form {
+    max-height: calc(100vh - 16px);
+    padding: 18px;
+  }
+
+  .dialog.order-dialog .dialog-header h2 {
+    font-size: 26px;
+  }
+
+  .dialog.order-dialog .add-form .row {
+    grid-template-columns: 1fr 75px;
+  }
+}

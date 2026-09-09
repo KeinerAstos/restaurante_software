@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import PedidoDialog from '../components/PedidoDialog'
 import { api } from '../services/api'
 
 const estadosActivos = [
@@ -57,6 +58,10 @@ function formatearFecha(valor) {
 function PedidosPage() {
   const [pedidos, setPedidos] = useState([])
   const [mesas, setMesas] = useState([])
+  const [pedidoSeleccionadoId, setPedidoSeleccionadoId] =
+    useState(null)
+
+  const [mostrarDetalle, setMostrarDetalle] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [actualizandoId, setActualizandoId] = useState(null)
   const [error, setError] = useState('')
@@ -71,8 +76,13 @@ function PedidosPage() {
         api.getMesas(),
       ])
 
-      setPedidos(Array.isArray(datosPedidos) ? datosPedidos : [])
-      setMesas(Array.isArray(datosMesas) ? datosMesas : [])
+      setPedidos(
+        Array.isArray(datosPedidos) ? datosPedidos : [],
+      )
+
+      setMesas(
+        Array.isArray(datosMesas) ? datosMesas : [],
+      )
     } catch (err) {
       setError(
         err.message || 'No fue posible consultar los pedidos.',
@@ -94,20 +104,67 @@ function PedidosPage() {
     return mesa?.numero ?? mesaId
   }
 
+  function abrirDetalle(pedido) {
+    setPedidoSeleccionadoId(pedido.id)
+    setMostrarDetalle(true)
+  }
+
+  function cerrarDetalle() {
+    setMostrarDetalle(false)
+    setPedidoSeleccionadoId(null)
+  }
+
+  function actualizarPedidoEnLista(pedidoActualizado) {
+    setPedidos((pedidosActuales) =>
+      pedidosActuales.map((pedido) =>
+        pedido.id === pedidoActualizado.id
+          ? pedidoActualizado
+          : pedido,
+      ),
+    )
+  }
+
   async function cambiarEstado(pedido, nuevoEstado) {
+    if (nuevoEstado === 'PAGADO') {
+      if (Number(pedido.total || 0) <= 0) {
+        window.alert(
+          'No se puede cerrar el pedido porque todavía no tiene productos.',
+        )
+
+        return
+      }
+
+      const confirmarPago = window.confirm(
+        `¿Confirmas el pago del pedido #${
+          pedido.id
+        } por ${formatearDinero(pedido.total)}?`,
+      )
+
+      if (!confirmarPago) {
+        return
+      }
+    }
+
     try {
       setActualizandoId(pedido.id)
 
-      const pedidoActualizado = await api.changeOrderStatus(
-        pedido.id,
-        nuevoEstado,
-      )
+      const pedidoActualizado =
+        await api.changeOrderStatus(
+          pedido.id,
+          nuevoEstado,
+        )
 
-      setPedidos((pedidosActuales) =>
-        pedidosActuales.map((item) =>
-          item.id === pedido.id ? pedidoActualizado : item,
-        ),
-      )
+      actualizarPedidoEnLista(pedidoActualizado)
+
+      if (nuevoEstado === 'PAGADO') {
+        window.alert(
+          `Pago registrado correctamente.\nPedido #${
+            pedido.id
+          }\nTotal: ${formatearDinero(
+            pedidoActualizado.total,
+          )}`,
+        )
+      }
     } catch (err) {
       window.alert(
         `No fue posible actualizar el pedido: ${
@@ -124,7 +181,9 @@ function PedidosPage() {
       `¿Deseas cancelar el pedido #${pedido.id}?`,
     )
 
-    if (!confirmado) return
+    if (!confirmado) {
+      return
+    }
 
     await cambiarEstado(pedido, 'CANCELADO')
   }
@@ -135,8 +194,8 @@ function PedidosPage() {
       new Date(pedidoA.created_at).getTime(),
   )
 
-  const pedidosActivos = pedidosOrdenados.filter((pedido) =>
-    estadosActivos.includes(pedido.estado),
+  const pedidosActivos = pedidosOrdenados.filter(
+    (pedido) => estadosActivos.includes(pedido.estado),
   )
 
   const historialPedidos = pedidosOrdenados.filter(
@@ -144,21 +203,32 @@ function PedidosPage() {
   )
 
   function renderizarPedido(pedido, permitirAcciones) {
-    const proximoEstado = siguienteEstado[pedido.estado]
-    const actualizando = actualizandoId === pedido.id
+    const proximoEstado =
+      siguienteEstado[pedido.estado]
+
+    const actualizando =
+      actualizandoId === pedido.id
 
     return (
-      <article className="order-card" key={pedido.id}>
-        <span className="number">#{pedido.id}</span>
+      <article
+        className="order-card"
+        key={pedido.id}
+      >
+        <span className="number">
+          #{pedido.id}
+        </span>
 
-        <span>
+        <span className="order-card-info">
           <strong>
             Mesa {obtenerNumeroMesa(pedido.mesa_id)}
           </strong>
 
           <span>
-            {nombresEstados[pedido.estado] || pedido.estado}
+            {nombresEstados[pedido.estado] ||
+              pedido.estado}
+
             {' · '}
+
             {formatearFecha(pedido.created_at)}
           </span>
         </span>
@@ -167,33 +237,57 @@ function PedidosPage() {
           {formatearDinero(pedido.total)}
         </span>
 
-        {permitirAcciones && (
-          <div className="table-actions">
-            {proximoEstado && (
+        <div className="order-card-actions">
+          {permitirAcciones && (
+            <>
               <button
                 type="button"
                 className="action-chip"
                 disabled={actualizando}
+                onClick={() => abrirDetalle(pedido)}
+              >
+                Ver pedido
+              </button>
+
+              {proximoEstado && (
+                <button
+                  type="button"
+                  className="action-chip"
+                  disabled={actualizando}
+                  onClick={() =>
+                    cambiarEstado(
+                      pedido,
+                      proximoEstado,
+                    )
+                  }
+                >
+                  {actualizando
+                    ? 'Actualizando...'
+                    : textoSiguienteEstado[
+                        pedido.estado
+                      ]}
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="action-chip danger"
+                disabled={actualizando}
                 onClick={() =>
-                  cambiarEstado(pedido, proximoEstado)
+                  cancelarPedido(pedido)
                 }
               >
-                {actualizando
-                  ? 'Actualizando...'
-                  : textoSiguienteEstado[pedido.estado]}
+                Cancelar
               </button>
-            )}
+            </>
+          )}
 
-            <button
-              type="button"
-              className="action-chip danger"
-              disabled={actualizando}
-              onClick={() => cancelarPedido(pedido)}
-            >
-              Cancelar
-            </button>
-          </div>
-        )}
+          {!permitirAcciones && (
+            <span className="action-disabled">
+              Pedido finalizado
+            </span>
+          )}
+        </div>
       </article>
     )
   }
@@ -209,7 +303,11 @@ function PedidosPage() {
   if (error) {
     return (
       <div className="empty-state">
-        <p>No fue posible consultar los pedidos: {error}</p>
+        <p>
+          No fue posible consultar los pedidos:
+          {' '}
+          {error}
+        </p>
 
         <button
           type="button"
@@ -223,63 +321,90 @@ function PedidosPage() {
   }
 
   return (
-    <section className="content-card">
-      <div className="section-toolbar">
-        <div>
-          <p className="eyebrow">SEGUIMIENTO</p>
-          <h2>Pedidos del restaurante</h2>
-          <p>Estados, totales e historial de atención.</p>
-        </div>
+    <>
+      <section className="content-card">
+        <div className="section-toolbar">
+          <div>
+            <p className="eyebrow">
+              SEGUIMIENTO
+            </p>
 
-        <button
-          type="button"
-          className="button secondary"
-          onClick={cargarDatos}
-        >
-          ↻ Actualizar
-        </button>
-      </div>
+            <h2>
+              Pedidos del restaurante
+            </h2>
 
-      <div className="two-columns">
-        <div>
-          <h3 className="column-title">
-            Pedidos activos ({pedidosActivos.length})
-          </h3>
-
-          <div className="order-list">
-            {pedidosActivos.length > 0 ? (
-              pedidosActivos.map((pedido) =>
-                renderizarPedido(pedido, true),
-              )
-            ) : (
-              <div className="empty-state">
-                No hay pedidos activos.
-              </div>
-            )}
+            <p>
+              Estados, totales e historial de atención.
+            </p>
           </div>
+
+          <button
+            type="button"
+            className="button secondary"
+            onClick={cargarDatos}
+          >
+            ↻ Actualizar
+          </button>
         </div>
 
-        <div>
-          <h3 className="column-title">
-            Historial reciente
-          </h3>
+        <div className="two-columns">
+          <div>
+            <h3 className="column-title">
+              Pedidos activos ({pedidosActivos.length})
+            </h3>
 
-          <div className="order-list">
-            {historialPedidos.length > 0 ? (
-              historialPedidos
-                .slice(0, 20)
-                .map((pedido) =>
-                  renderizarPedido(pedido, false),
+            <div className="order-list">
+              {pedidosActivos.length > 0 ? (
+                pedidosActivos.map((pedido) =>
+                  renderizarPedido(
+                    pedido,
+                    true,
+                  ),
                 )
-            ) : (
-              <div className="empty-state">
-                No hay pedidos en el historial.
-              </div>
-            )}
+              ) : (
+                <div className="empty-state">
+                  No hay pedidos activos.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="column-title">
+              Historial reciente
+            </h3>
+
+            <div className="order-list">
+              {historialPedidos.length > 0 ? (
+                historialPedidos
+                  .slice(0, 20)
+                  .map((pedido) =>
+                    renderizarPedido(
+                      pedido,
+                      false,
+                    ),
+                  )
+              ) : (
+                <div className="empty-state">
+                  No hay pedidos en el historial.
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {mostrarDetalle &&
+        pedidoSeleccionadoId && (
+          <PedidoDialog
+            pedidoId={pedidoSeleccionadoId}
+            cerrar={cerrarDetalle}
+            pedidoActualizado={
+              actualizarPedidoEnLista
+            }
+          />
+        )}
+    </>
   )
 }
 
