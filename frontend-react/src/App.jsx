@@ -1,43 +1,52 @@
 import { useEffect, useState } from 'react'
 import Sidebar from './components/Sidebar'
 import MesasPage from './pages/MesasPage'
+import PedidosPage from './pages/PedidosPage'
+import ReservasPage from './pages/ReservasPage'
 import MenuPage from './pages/MenuPage'
 import ClientesPage from './pages/ClientesPage'
-import ReservasPage from './pages/ReservasPage'
 import { api } from './services/api'
 
 const informacionVistas = {
   mesas: {
     titulo: 'Administración de mesas',
-    subtitulo: 'Controla tu restaurante, crea grandes experiencias.',
+    subtitulo:
+      'Controla tu restaurante, crea grandes experiencias.',
   },
   pedidos: {
     titulo: 'Gestión de pedidos',
-    subtitulo: 'Consulta y administra los pedidos del restaurante.',
+    subtitulo:
+      'Consulta y administra los pedidos del restaurante.',
   },
   reservas: {
     titulo: 'Gestión de reservas',
-    subtitulo: 'Organiza las reservas y disponibilidad de las mesas.',
+    subtitulo:
+      'Organiza las reservas y disponibilidad de las mesas.',
   },
   menu: {
     titulo: 'Menú del restaurante',
-    subtitulo: 'Administra los productos disponibles para los pedidos.',
+    subtitulo:
+      'Administra los productos disponibles para los pedidos.',
   },
   clientes: {
     titulo: 'Gestión de clientes',
-    subtitulo: 'Consulta y administra la información de los clientes.',
+    subtitulo:
+      'Consulta y administra la información de los clientes.',
   },
   cocina: {
     titulo: 'Operación de cocina',
-    subtitulo: 'Gestiona el estado de preparación de los pedidos.',
+    subtitulo:
+      'Gestiona el estado de preparación de los pedidos.',
   },
   reportes: {
     titulo: 'Reportes del restaurante',
-    subtitulo: 'Consulta los indicadores principales de la operación.',
+    subtitulo:
+      'Consulta los indicadores principales de la operación.',
   },
   configuracion: {
     titulo: 'Configuración',
-    subtitulo: 'Administra la información general del restaurante.',
+    subtitulo:
+      'Administra la información general del restaurante.',
   },
 }
 
@@ -54,23 +63,27 @@ function App() {
       .finally(() => setCargando(false))
   }, [])
 
-  const informacion = informacionVistas[vistaActual]
+  const informacion =
+    informacionVistas[vistaActual] || informacionVistas.mesas
 
   function mostrarContenido() {
     if (vistaActual === 'mesas') {
-      return <MesasPage />
+return <MesasPage cambiarVista={setVistaActual} />    }
+
+    if (vistaActual === 'pedidos') {
+      return <PedidosPage cambiarVista={setVistaActual} />
     }
 
     if (vistaActual === 'reservas') {
-      return <ReservasPage />
+      return <ReservasPage cambiarVista={setVistaActual} />
     }
 
     if (vistaActual === 'menu') {
-      return <MenuPage />
+      return <MenuPage cambiarVista={setVistaActual} />
     }
 
     if (vistaActual === 'clientes') {
-      return <ClientesPage />
+      return <ClientesPage cambiarVista={setVistaActual} />
     }
 
     return (

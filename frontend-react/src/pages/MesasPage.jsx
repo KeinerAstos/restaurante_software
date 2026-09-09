@@ -9,10 +9,11 @@ const nombresEstados = {
   FUERA_DE_SERVICIO: 'Fuera de servicio',
 }
 
-function MesasPage() {
+function MesasPage({ cambiarVista }) {
   const [mesas, setMesas] = useState([])
   const [busqueda, setBusqueda] = useState('')
   const [cargando, setCargando] = useState(true)
+  const [procesandoMesaId, setProcesandoMesaId] = useState(null)
   const [error, setError] = useState('')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mesaSeleccionada, setMesaSeleccionada] = useState(null)
@@ -23,9 +24,11 @@ function MesasPage() {
       setError('')
 
       const datos = await api.getMesas()
-      setMesas(datos)
+      setMesas(Array.isArray(datos) ? datos : [])
     } catch (err) {
-      setError(err.message)
+      setError(
+        err.message || 'No fue posible consultar las mesas.',
+      )
     } finally {
       setCargando(false)
     }
@@ -51,18 +54,18 @@ function MesasPage() {
   }
 
   function actualizarLista(mesaGuardada) {
-    setMesas((actuales) => {
-      const existe = actuales.some(
+    setMesas((mesasActuales) => {
+      const existe = mesasActuales.some(
         (mesa) => mesa.id === mesaGuardada.id,
       )
 
       if (existe) {
-        return actuales.map((mesa) =>
+        return mesasActuales.map((mesa) =>
           mesa.id === mesaGuardada.id ? mesaGuardada : mesa,
         )
       }
 
-      return [...actuales, mesaGuardada]
+      return [...mesasActuales, mesaGuardada]
     })
 
     cerrarFormulario()
@@ -70,51 +73,109 @@ function MesasPage() {
 
   async function cambiarEstado(mesa, nuevoEstado) {
     try {
-      const actualizada = await api.updateMesa(mesa.id, {
+      setProcesandoMesaId(mesa.id)
+
+      const mesaActualizada = await api.updateMesa(mesa.id, {
         estado: nuevoEstado,
       })
 
-      setMesas((actuales) =>
-        actuales.map((item) =>
-          item.id === mesa.id ? actualizada : item,
+      setMesas((mesasActuales) =>
+        mesasActuales.map((item) =>
+          item.id === mesa.id ? mesaActualizada : item,
         ),
       )
     } catch (err) {
-      window.alert(`No fue posible actualizar la mesa: ${err.message}`)
+      window.alert(
+        `No fue posible actualizar la mesa: ${
+          err.message || 'Error desconocido'
+        }`,
+      )
+    } finally {
+      setProcesandoMesaId(null)
     }
   }
 
-  const texto = busqueda.trim().toLowerCase()
+  async function abrirPedido(mesa) {
+    try {
+      setProcesandoMesaId(mesa.id)
+
+      const pedido = await api.createPedido(mesa.id)
+
+      window.alert(
+        `Pedido #${pedido.id} creado correctamente para la Mesa ${mesa.numero}.`,
+      )
+
+      await cargarMesas()
+
+      if (cambiarVista) {
+        cambiarVista('pedidos')
+      }
+    } catch (err) {
+      window.alert(
+        `No fue posible abrir el pedido: ${
+          err.message || 'Error desconocido'
+        }`,
+      )
+    } finally {
+      setProcesandoMesaId(null)
+    }
+  }
+
+  const textoBusqueda = busqueda.trim().toLowerCase()
 
   const mesasFiltradas = mesas
     .filter(
       (mesa) =>
-        !texto ||
-        String(mesa.numero).includes(texto) ||
-        (mesa.ubicacion || '').toLowerCase().includes(texto) ||
-        nombresEstados[mesa.estado]?.toLowerCase().includes(texto),
+        !textoBusqueda ||
+        String(mesa.numero).includes(textoBusqueda) ||
+        (mesa.ubicacion || '')
+          .toLowerCase()
+          .includes(textoBusqueda) ||
+        nombresEstados[mesa.estado]
+          ?.toLowerCase()
+          .includes(textoBusqueda),
     )
-    .sort((a, b) => Number(a.numero) - Number(b.numero))
+    .sort(
+      (mesaA, mesaB) =>
+        Number(mesaA.numero) - Number(mesaB.numero),
+    )
 
-  const totalActivas = mesas.filter((mesa) => mesa.activo !== false).length
+  const totalActivas = mesas.filter(
+    (mesa) => mesa.activo !== false,
+  ).length
+
   const totalLibres = mesas.filter(
     (mesa) => mesa.estado === 'LIBRE',
   ).length
+
   const totalOcupadas = mesas.filter(
     (mesa) => mesa.estado === 'OCUPADA',
   ).length
+
   const totalReservadas = mesas.filter(
     (mesa) => mesa.estado === 'RESERVADA',
   ).length
 
   if (cargando) {
-    return <div className="empty-state">Cargando mesas...</div>
+    return (
+      <div className="empty-state">
+        Cargando mesas...
+      </div>
+    )
   }
 
   if (error) {
     return (
       <div className="empty-state">
-        No fue posible consultar las mesas: {error}
+        <p>No fue posible consultar las mesas: {error}</p>
+
+        <button
+          type="button"
+          className="button primary"
+          onClick={cargarMesas}
+        >
+          Intentar nuevamente
+        </button>
       </div>
     )
   }
@@ -168,7 +229,9 @@ function MesasPage() {
               type="search"
               placeholder="Buscar mesa..."
               value={busqueda}
-              onChange={(evento) => setBusqueda(evento.target.value)}
+              onChange={(evento) =>
+                setBusqueda(evento.target.value)
+              }
             />
 
             <button
@@ -194,58 +257,112 @@ function MesasPage() {
             </thead>
 
             <tbody>
-              {mesasFiltradas.map((mesa) => (
-                <tr key={mesa.id}>
-                  <td>
-                    <strong>Mesa {mesa.numero}</strong>
-                  </td>
+              {mesasFiltradas.map((mesa) => {
+                const procesando = procesandoMesaId === mesa.id
 
-                  <td>{mesa.capacidad} personas</td>
-                  <td>{mesa.ubicacion || 'Sin ubicación'}</td>
+                const puedeAbrirPedido = [
+                  'LIBRE',
+                  'RESERVADA',
+                ].includes(mesa.estado)
 
-                  <td>
-                    <span
-                      className={`status-pill status-${mesa.estado}`}
-                    >
-                      {nombresEstados[mesa.estado] || mesa.estado}
-                    </span>
-                  </td>
+                return (
+                  <tr key={mesa.id}>
+                    <td>
+                      <strong>Mesa {mesa.numero}</strong>
+                    </td>
 
-                  <td>
-                    <div className="table-actions">
-                      <button
-                        type="button"
-                        className="action-chip"
-                        onClick={() => abrirEdicion(mesa)}
+                    <td>{mesa.capacidad} personas</td>
+
+                    <td>
+                      {mesa.ubicacion || 'Sin ubicación'}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`status-pill status-${mesa.estado}`}
                       >
-                        Editar
-                      </button>
+                        {nombresEstados[mesa.estado] ||
+                          mesa.estado}
+                      </span>
+                    </td>
 
-                      {mesa.estado !== 'LIBRE' && (
+                    <td>
+                      <div className="table-actions">
                         <button
                           type="button"
                           className="action-chip"
-                          onClick={() => cambiarEstado(mesa, 'LIBRE')}
+                          disabled={procesando}
+                          onClick={() => abrirEdicion(mesa)}
                         >
-                          Liberar
+                          Editar
                         </button>
-                      )}
 
-                      {mesa.estado === 'LIBRE' && (
-                        <button
-                          type="button"
-                          className="action-chip"
-                          onClick={() =>
-                            cambiarEstado(mesa, 'RESERVADA')
-                          }
-                        >
-                          Reservar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {puedeAbrirPedido && (
+                          <button
+                            type="button"
+                            className="action-chip"
+                            disabled={procesando}
+                            onClick={() => abrirPedido(mesa)}
+                          >
+                            {procesando
+                              ? 'Abriendo...'
+                              : 'Abrir pedido'}
+                          </button>
+                        )}
+
+                        {mesa.estado === 'LIBRE' && (
+                          <button
+                            type="button"
+                            className="action-chip"
+                            disabled={procesando}
+                            onClick={() =>
+                              cambiarEstado(
+                                mesa,
+                                'RESERVADA',
+                              )
+                            }
+                          >
+                            Reservar
+                          </button>
+                        )}
+
+                        {mesa.estado === 'RESERVADA' && (
+                          <button
+                            type="button"
+                            className="action-chip"
+                            disabled={procesando}
+                            onClick={() =>
+                              cambiarEstado(mesa, 'LIBRE')
+                            }
+                          >
+                            Liberar reserva
+                          </button>
+                        )}
+
+                        {mesa.estado === 'OCUPADA' && (
+                          <span className="action-disabled">
+                            Pedido activo
+                          </span>
+                        )}
+
+                        {mesa.estado ===
+                          'FUERA_DE_SERVICIO' && (
+                          <button
+                            type="button"
+                            className="action-chip"
+                            disabled={procesando}
+                            onClick={() =>
+                              cambiarEstado(mesa, 'LIBRE')
+                            }
+                          >
+                            Habilitar
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
 
               {mesasFiltradas.length === 0 && (
                 <tr>

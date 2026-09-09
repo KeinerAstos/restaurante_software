@@ -70,3 +70,36 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:3px;font:500 clamp(31px,3.3vw,48px)/1 G
 @media(max-width:980px){.app-shell{grid-template-columns:78px minmax(0,1fr)}.brand-name,.brand-subtitle,.sidebar-illustration,.sidebar-quote,.nav-item span:last-child,.connection div{display:none}.brand{padding:5px 0 20px}.nav-item{justify-content:center;padding:0}.workspace-grid{grid-template-columns:1fr}.details-column{grid-template-columns:1fr 1fr}.stats-grid{grid-template-columns:1fr 1fr}.reports-layout{grid-template-columns:1fr}.kitchen-board{grid-template-columns:1fr}.two-columns{grid-template-columns:1fr}}
 @media(max-width:720px){.app-shell{display:block}.sidebar{position:static;width:100%;height:auto;padding:8px;flex-direction:row;align-items:center;overflow-x:auto}.brand{margin-right:auto;padding:0 8px}.brand-leaf{margin:0}.main-nav{display:flex}.nav-item{width:42px;min-width:42px;min-height:40px}.connection{display:none}.main-content{padding:20px 12px 35px}.page-header{align-items:stretch;flex-direction:column}.header-right{justify-content:stretch}.header-right .button{flex:1}.stats-grid,.reports-grid{grid-template-columns:1fr 1fr}.floor-toolbar,.section-toolbar{align-items:stretch;flex-direction:column}.legend{gap:8px;flex-wrap:wrap}.floor-filters{width:100%;flex-wrap:wrap}.restaurant-map{min-height:390px}.details-column{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full-span{grid-column:auto}.rank-row{grid-template-columns:120px 1fr 55px}}
 @media(max-width:480px){h1{font-size:30px}.stats-grid,.reports-grid{grid-template-columns:1fr}.restaurant-map{min-width:650px}.floor-card{overflow-x:auto}.category-tabs{overflow-x:auto;flex-wrap:nowrap}.menu-grid{grid-template-columns:1fr}}
+
+
+/* Títulos de las columnas del módulo de pedidos */
+.column-title {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  color: #5f4937;
+  border-bottom: 1px solid #ddd2c4;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}
