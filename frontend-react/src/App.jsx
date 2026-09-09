@@ -6,6 +6,7 @@ import ReservasPage from './pages/ReservasPage'
 import MenuPage from './pages/MenuPage'
 import CocinaPage from './pages/CocinaPage'
 import ClientesPage from './pages/ClientesPage'
+import ReportesPage from './pages/ReportesPage'
 import { api } from './services/api'
 
 const informacionVistas = {
@@ -87,6 +88,14 @@ return <MesasPage cambiarVista={setVistaActual} />    }
       return <CocinaPage />
     }
 
+    if (vistaActual === 'cocina') {
+      return <CocinaPage />
+    }
+    
+    if (vistaActual === 'reportes') {
+      return <ReportesPage />
+    }
+
     return (
       <section className="content-card">
         {cargando ? (
@@ -139,7 +148,7 @@ return <MesasPage cambiarVista={setVistaActual} />    }
             <button
               type="button"
               className="button secondary"
-              onClick={() => window.location.reload()}
+              onClick={() => window.location.reload()} 
             >
               ↻ Actualizar
             </button>
