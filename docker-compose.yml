@@ -8,7 +8,11 @@ services:
     volumes:
       - restaurante_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d ${DB_NAME}"
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -35,7 +39,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-react
     depends_on:
       - backend
     ports:
