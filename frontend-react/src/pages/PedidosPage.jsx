@@ -84,7 +84,8 @@ function PedidosPage() {
       )
     } catch (err) {
       setError(
-        err.message || 'No fue posible consultar los pedidos.',
+        err.message ||
+          'No fue posible consultar los pedidos.',
       )
     } finally {
       setCargando(false)
@@ -152,7 +153,6 @@ function PedidosPage() {
         nuevoEstado,
       )
 
-      // Consulta nuevamente los datos reales del backend.
       await cargarDatos()
 
       if (nuevoEstado === 'PAGADO') {
@@ -308,17 +308,6 @@ function PedidosPage() {
               Estados, totales e historial de atención.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="button secondary"
-            disabled={cargando}
-            onClick={cargarDatos}
-          >
-            {cargando
-              ? 'Actualizando...'
-              : '↻ Actualizar'}
-          </button>
         </div>
 
         <div className="two-columns">

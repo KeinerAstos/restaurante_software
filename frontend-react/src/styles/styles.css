@@ -278,4 +278,44 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:3px;font:500 clamp(31px,3.3vw,48px)/1 G
   margin-top: 6px;
   color: #d8c59f;
   font-size: 11px;
+} 
+
+.restaurant-map.layout-editing {
+  outline: 3px solid rgba(183, 134, 53, 0.35);
+  outline-offset: 3px;
+}
+
+.restaurant-map.layout-editing .floor-table {
+  cursor: grab;
+}
+
+.restaurant-map.layout-editing .floor-table.dragging {
+  cursor: grabbing;
+}
+
+.floor-table {
+  padding: 0;
+}
+
+.floor-table:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .restaurant-map {
+    min-width: 760px;
+  }
+}
+
+.mesas-table-card {
+  margin-top: 16px;
+}
+
+.recent-orders {
+  display: grid;
+}
+
+.layout-editing .floor-table {
+  touch-action: none;
 }

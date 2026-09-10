@@ -4,8 +4,8 @@ import MesasPage from './pages/MesasPage'
 import PedidosPage from './pages/PedidosPage'
 import ReservasPage from './pages/ReservasPage'
 import MenuPage from './pages/MenuPage'
-import CocinaPage from './pages/CocinaPage'
 import ClientesPage from './pages/ClientesPage'
+import CocinaPage from './pages/CocinaPage'
 import ReportesPage from './pages/ReportesPage'
 import ConfiguracionPage from './pages/ConfiguracionPage'
 import { api } from './services/api'
@@ -53,78 +53,103 @@ const informacionVistas = {
   },
 }
 
+function formatearFecha(fecha) {
+  return new Intl.DateTimeFormat('es-CO', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(fecha)
+}
+
+function formatearHora(fecha) {
+  return new Intl.DateTimeFormat('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(fecha)
+}
+
 function App() {
   const [vistaActual, setVistaActual] = useState('mesas')
   const [conectado, setConectado] = useState(false)
   const [cargando, setCargando] = useState(true)
+  const [fechaActual, setFechaActual] = useState(
+    () => new Date(),
+  )
+
+  async function verificarConexion() {
+    try {
+      setCargando(true)
+
+      await Promise.all([
+        api.health(),
+        api.healthDatabase(),
+      ])
+
+      setConectado(true)
+    } catch {
+      setConectado(false)
+    } finally {
+      setCargando(false)
+    }
+  }
 
   useEffect(() => {
-    api
-      .health()
-      .then(() => setConectado(true))
-      .catch(() => setConectado(false))
-      .finally(() => setCargando(false))
+    verificarConexion()
+  }, [])
+
+  useEffect(() => {
+    const intervalo = window.setInterval(() => {
+      setFechaActual(new Date())
+    }, 30000)
+
+    return () => {
+      window.clearInterval(intervalo)
+    }
   }, [])
 
   const informacion =
-    informacionVistas[vistaActual] || informacionVistas.mesas
+    informacionVistas[vistaActual] ||
+    informacionVistas.mesas
 
   function mostrarContenido() {
-    if (vistaActual === 'mesas') {
-return <MesasPage cambiarVista={setVistaActual} />    }
+    switch (vistaActual) {
+      case 'mesas':
+        return (
+          <MesasPage cambiarVista={setVistaActual} />
+        )
 
-    if (vistaActual === 'pedidos') {
-      return <PedidosPage cambiarVista={setVistaActual} />
+      case 'pedidos':
+        return <PedidosPage />
+
+      case 'reservas':
+        return <ReservasPage />
+
+      case 'menu':
+        return <MenuPage />
+
+      case 'clientes':
+        return <ClientesPage />
+
+      case 'cocina':
+        return <CocinaPage />
+
+      case 'reportes':
+        return <ReportesPage />
+
+      case 'configuracion':
+        return <ConfiguracionPage />
+
+      default:
+        return (
+          <section className="content-card">
+            <div className="empty-state">
+              La sección seleccionada no existe.
+            </div>
+          </section>
+        )
     }
-
-    if (vistaActual === 'reservas') {
-      return <ReservasPage cambiarVista={setVistaActual} />
-    }
-
-    if (vistaActual === 'menu') {
-      return <MenuPage cambiarVista={setVistaActual} />
-    }
-
-    if (vistaActual === 'cocina') {
-      return <CocinaPage />
-    }
-
-    if (vistaActual === 'cocina') {
-      return <CocinaPage />
-    }
-
-if (vistaActual === 'reportes') {
-  return <ReportesPage />
-}
-
-if (vistaActual === 'configuracion') {
-  return <ConfiguracionPage />
-}
-
-    return (
-      <section className="content-card">
-        {cargando ? (
-          <p>Consultando el backend...</p>
-        ) : conectado ? (
-          <>
-            <h2>{informacion.titulo}</h2>
-
-            <p>
-              React está conectado correctamente con FastAPI. En esta
-              sección construiremos el módulo de {vistaActual}.
-            </p>
-          </>
-        ) : (
-          <>
-            <h2>No fue posible conectar con FastAPI</h2>
-
-            <p>
-              Verifica que Docker y el backend estén funcionando.
-            </p>
-          </>
-        )}
-      </section>
-    )
   }
 
   return (
@@ -150,17 +175,54 @@ if (vistaActual === 'configuracion') {
           </div>
 
           <div className="header-right">
+            <div className="clock-block">
+              <span>{formatearFecha(fechaActual)}</span>
+              <strong>{formatearHora(fechaActual)}</strong>
+            </div>
+
+            <div className="manager-card">
+              <div className="manager-avatar">
+                G
+              </div>
+
+              <div>
+                <span>Sesión</span>
+                <strong>Gerente</strong>
+              </div>
+            </div>
+
             <button
               type="button"
               className="button secondary"
-              onClick={() => window.location.reload()} 
+              onClick={() => window.location.reload()}
             >
               ↻ Actualizar
             </button>
           </div>
         </header>
 
-        {mostrarContenido()}
+        {!conectado && !cargando ? (
+          <section className="content-card">
+            <div className="empty-state">
+              <h2>No fue posible conectar con FastAPI</h2>
+
+              <p>
+                Verifica que Docker y el backend estén
+                funcionando.
+              </p>
+
+              <button
+                type="button"
+                className="button primary"
+                onClick={verificarConexion}
+              >
+                Intentar nuevamente
+              </button>
+            </div>
+          </section>
+        ) : (
+          mostrarContenido()
+        )}
       </main>
     </div>
   )
