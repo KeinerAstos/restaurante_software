@@ -124,7 +124,9 @@ function App() {
         return <PedidosPage />
 
       case 'reservas':
-        return <ReservasPage />
+        return (
+          <ReservasPage cambiarVista={setVistaActual} />
+        )
 
       case 'menu':
         return <MenuPage />
@@ -204,7 +206,9 @@ function App() {
         {!conectado && !cargando ? (
           <section className="content-card">
             <div className="empty-state">
-              <h2>No fue posible conectar con FastAPI</h2>
+              <h2>
+                No fue posible conectar con FastAPI
+              </h2>
 
               <p>
                 Verifica que Docker y el backend estén

@@ -6,8 +6,13 @@ function fechaParaFormulario(valor) {
 
   const fecha = new Date(valor)
 
+  if (Number.isNaN(fecha.getTime())) {
+    return ''
+  }
+
   const fechaLocal = new Date(
-    fecha.getTime() - fecha.getTimezoneOffset() * 60000,
+    fecha.getTime() -
+      fecha.getTimezoneOffset() * 60000,
   )
 
   return fechaLocal.toISOString().slice(0, 16)
@@ -25,12 +30,15 @@ function ReservaDialog({
   const [formulario, setFormulario] = useState({
     cliente_id: reserva?.cliente_id || '',
     mesa_id: reserva?.mesa_id || '',
-    fecha_hora: fechaParaFormulario(reserva?.fecha_hora),
+    fecha_hora: fechaParaFormulario(
+      reserva?.fecha_hora,
+    ),
     personas: reserva?.personas || 2,
     observaciones: reserva?.observaciones || '',
   })
 
-  const [guardando, setGuardando] = useState(false)
+  const [guardando, setGuardando] =
+    useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -48,17 +56,67 @@ function ReservaDialog({
       ...actual,
       [name]: value,
     }))
+
+    setError('')
+  }
+
+  function obtenerMesaSeleccionada() {
+    return mesas.find(
+      (mesa) =>
+        Number(mesa.id) ===
+        Number(formulario.mesa_id),
+    )
   }
 
   async function guardar(evento) {
     evento.preventDefault()
 
+    const mesaSeleccionada =
+      obtenerMesaSeleccionada()
+
+    if (!mesaSeleccionada) {
+      setError('Debes seleccionar una mesa.')
+      return
+    }
+
+    const esMesaOriginal =
+      reserva &&
+      Number(mesaSeleccionada.id) ===
+        Number(reserva.mesa_id)
+
+    if (
+      mesaSeleccionada.estado !== 'LIBRE' &&
+      !esMesaOriginal
+    ) {
+      setError(
+        `La Mesa ${mesaSeleccionada.numero} ya no está disponible. Selecciona otra mesa.`,
+      )
+      return
+    }
+
+    const personas = Number(formulario.personas)
+
+    if (personas > Number(mesaSeleccionada.capacidad)) {
+      setError(
+        `La Mesa ${mesaSeleccionada.numero} admite máximo ${mesaSeleccionada.capacidad} personas.`,
+      )
+      return
+    }
+
+    const fecha = new Date(formulario.fecha_hora)
+
+    if (Number.isNaN(fecha.getTime())) {
+      setError('La fecha y hora no son válidas.')
+      return
+    }
+
     const datos = {
       cliente_id: Number(formulario.cliente_id),
       mesa_id: Number(formulario.mesa_id),
-      fecha_hora: new Date(formulario.fecha_hora).toISOString(),
-      personas: Number(formulario.personas),
-      observaciones: formulario.observaciones.trim() || null,
+      fecha_hora: fecha.toISOString(),
+      personas,
+      observaciones:
+        formulario.observaciones.trim() || null,
     }
 
     try {
@@ -66,12 +124,18 @@ function ReservaDialog({
       setError('')
 
       const resultado = reserva
-        ? await api.updateReserva(reserva.id, datos)
+        ? await api.updateReserva(
+            reserva.id,
+            datos,
+          )
         : await api.createReserva(datos)
 
       reservaGuardada(resultado)
     } catch (err) {
-      setError(err.message)
+      setError(
+        err.message ||
+          'No fue posible guardar la reserva.',
+      )
     } finally {
       setGuardando(false)
     }
@@ -81,9 +145,21 @@ function ReservaDialog({
     (cliente) => cliente.activo !== false,
   )
 
-  const mesasActivas = mesas.filter(
-    (mesa) => mesa.activo !== false,
-  )
+  const mesasDisponibles = mesas.filter((mesa) => {
+    if (mesa.activo === false) {
+      return false
+    }
+
+    const esMesaActual =
+      reserva &&
+      Number(mesa.id) ===
+        Number(reserva.mesa_id)
+
+    return mesa.estado === 'LIBRE' || esMesaActual
+  })
+
+  const mesaSeleccionada =
+    obtenerMesaSeleccionada()
 
   return (
     <dialog
@@ -95,10 +171,14 @@ function ReservaDialog({
       <form onSubmit={guardar}>
         <div className="dialog-header">
           <div>
-            <p className="eyebrow">RESERVAS</p>
+            <p className="eyebrow">
+              RESERVAS
+            </p>
 
             <h2>
-              {reserva ? 'Editar reserva' : 'Nueva reserva'}
+              {reserva
+                ? 'Editar reserva'
+                : 'Nueva reserva'}
             </h2>
           </div>
 
@@ -121,10 +201,15 @@ function ReservaDialog({
             onChange={actualizarCampo}
             required
           >
-            <option value="">Selecciona un cliente</option>
+            <option value="">
+              Selecciona un cliente
+            </option>
 
             {clientesActivos.map((cliente) => (
-              <option key={cliente.id} value={cliente.id}>
+              <option
+                key={cliente.id}
+                value={cliente.id}
+              >
                 {cliente.nombre}
               </option>
             ))}
@@ -133,7 +218,7 @@ function ReservaDialog({
 
         <div className="form-grid compact-grid">
           <label className="field">
-            <span>Mesa</span>
+            <span>Mesa disponible</span>
 
             <select
               name="mesa_id"
@@ -141,11 +226,21 @@ function ReservaDialog({
               onChange={actualizarCampo}
               required
             >
-              <option value="">Selecciona una mesa</option>
+              <option value="">
+                Selecciona una mesa
+              </option>
 
-              {mesasActivas.map((mesa) => (
-                <option key={mesa.id} value={mesa.id}>
-                  Mesa {mesa.numero} - {mesa.capacidad} personas
+              {mesasDisponibles.map((mesa) => (
+                <option
+                  key={mesa.id}
+                  value={mesa.id}
+                >
+                  Mesa {mesa.numero}
+                  {' - '}
+                  {mesa.capacidad} personas
+                  {mesa.estado !== 'LIBRE'
+                    ? ` - ${mesa.estado}`
+                    : ' - Disponible'}
                 </option>
               ))}
             </select>
@@ -158,13 +253,23 @@ function ReservaDialog({
               name="personas"
               type="number"
               min="1"
-              max="50"
+              max={
+                mesaSeleccionada?.capacidad || 50
+              }
               value={formulario.personas}
               onChange={actualizarCampo}
               required
             />
           </label>
         </div>
+
+        {mesaSeleccionada && (
+          <p className="field-help">
+            Capacidad máxima de la Mesa{' '}
+            {mesaSeleccionada.numero}:{' '}
+            {mesaSeleccionada.capacidad} personas.
+          </p>
+        )}
 
         <label className="field">
           <span>Fecha y hora</span>
@@ -191,18 +296,23 @@ function ReservaDialog({
 
         {clientesActivos.length === 0 && (
           <p className="form-error">
-            Debes registrar o reactivar un cliente antes de crear una
-            reserva.
+            Debes registrar o reactivar un cliente
+            antes de crear una reserva.
           </p>
         )}
 
-        {mesasActivas.length === 0 && (
+        {mesasDisponibles.length === 0 && (
           <p className="form-error">
-            No existen mesas activas para realizar la reserva.
+            No existen mesas libres para realizar
+            una reserva.
           </p>
         )}
 
-        {error && <p className="form-error">{error}</p>}
+        {error && (
+          <p className="form-error">
+            {error}
+          </p>
+        )}
 
         <div className="dialog-actions">
           <button
@@ -219,10 +329,12 @@ function ReservaDialog({
             disabled={
               guardando ||
               clientesActivos.length === 0 ||
-              mesasActivas.length === 0
+              mesasDisponibles.length === 0
             }
           >
-            {guardando ? 'Guardando...' : 'Guardar reserva'}
+            {guardando
+              ? 'Guardando...'
+              : 'Guardar reserva'}
           </button>
         </div>
       </form>
