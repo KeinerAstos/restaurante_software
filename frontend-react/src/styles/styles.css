@@ -319,3 +319,275 @@ h1,h2,h3,p{margin-top:0}h1{margin-bottom:3px;font:500 clamp(31px,3.3vw,48px)/1 G
 .layout-editing .floor-table {
   touch-action: none;
 }
+
+/* =========================================================
+   TABLERO DE COCINA
+   ========================================================= */
+
+.kitchen-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.kitchen-column {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e4ddd2;
+  border-radius: 18px;
+  background: #f8f5ef;
+}
+
+.kitchen-column-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.kitchen-column-title strong {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+}
+
+.kitchen-column-title.pending {
+  color: #8a5700;
+  background: #ffedbd;
+}
+
+.kitchen-column-title.preparing {
+  color: #9d2929;
+  background: #ffdada;
+}
+
+.kitchen-column-title.ready {
+  color: #086545;
+  background: #d3f1e5;
+}
+
+.kitchen-list {
+  display: grid;
+  gap: 14px;
+}
+
+.kitchen-ticket {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #dfd7cb;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow:
+    0 8px 24px rgba(46, 34, 24, 0.06);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.kitchen-ticket:hover {
+  transform: translateY(-2px);
+  border-color: #c6b8a6;
+  box-shadow:
+    0 12px 30px rgba(46, 34, 24, 0.1);
+}
+
+.ticket-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #eee7dd;
+}
+
+.ticket-head > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ticket-head > div > strong {
+  color: #172d28;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.ticket-head small {
+  display: block;
+  color: #7b746b;
+  font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ticket-head .status-pill {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.ticket-items {
+  display: grid;
+  gap: 10px;
+}
+
+.ticket-item {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid #eee7dd;
+  border-radius: 10px;
+  color: #263b36;
+  background: #faf8f4;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ticket-item b {
+  color: #006b50;
+  font-size: 15px;
+}
+
+.ticket-note {
+  display: block;
+  margin-top: 3px;
+  padding-left: 10px;
+  border-left: 3px solid #d4a44d;
+  color: #766a5d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.ticket-empty {
+  padding: 16px;
+  border: 1px dashed #d9cdbd;
+  border-radius: 10px;
+  color: #8a7d6e;
+  background: #fbf8f3;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.ticket-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 13px;
+  border-top: 1px solid #eee7dd;
+}
+
+.ticket-total span {
+  color: #7a7065;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ticket-total strong {
+  color: #102f28;
+  font-size: 20px;
+}
+
+.kitchen-ticket .button.full {
+  width: 100%;
+  min-height: 42px;
+  margin: 0;
+  border-radius: 10px;
+}
+
+.kitchen-ticket .button:disabled {
+  color: #8f877d;
+  border-color: #ddd5ca;
+  background: #eeeae4;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.kitchen-column .empty-state {
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  border: 1px dashed #d9cfc2;
+  border-radius: 12px;
+  color: #8a8176;
+  background: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+/* Estado visual de cada ticket */
+
+.kitchen-column:nth-child(1) .kitchen-ticket {
+  border-top: 4px solid #e5a82c;
+}
+
+.kitchen-column:nth-child(2) .kitchen-ticket {
+  border-top: 4px solid #d95757;
+}
+
+.kitchen-column:nth-child(3) .kitchen-ticket {
+  border-top: 4px solid #1a9a70;
+}
+
+/* Adaptación para pantallas más pequeñas */
+
+@media (max-width: 1100px) {
+  .kitchen-board {
+    grid-template-columns: 1fr;
+  }
+
+  .kitchen-column {
+    width: 100%;
+  }
+
+  .kitchen-list {
+    grid-template-columns:
+      repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kitchen-board {
+    gap: 14px;
+  }
+
+  .kitchen-column {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .kitchen-list {
+    grid-template-columns: 1fr;
+  }
+
+  .kitchen-ticket {
+    padding: 15px;
+  }
+
+  .ticket-head {
+    align-items: flex-start;
+  }
+
+  .ticket-head > div > strong {
+    font-size: 17px;
+  }
+}

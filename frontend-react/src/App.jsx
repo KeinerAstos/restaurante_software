@@ -134,8 +134,10 @@ function App() {
       case 'clientes':
         return <ClientesPage />
 
-      case 'cocina':
-        return <CocinaPage />
+case 'cocina':
+  return (
+    <CocinaPage cambiarVista={setVistaActual} />
+  )
 
       case 'reportes':
         return <ReportesPage />
