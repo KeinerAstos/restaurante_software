@@ -15,7 +15,26 @@ La solución está compuesta por:
 - **Control de versiones:** Git y GitHub.
 - **Infraestructura en la nube:** máquina virtual Ubuntu 24.04 en Microsoft Azure.
 
+## URL de acceso
 
+### Aplicación desplegada en Microsoft Azure
+
+- Aplicación web mediante DNS:
+  http://trattoria-bellavista.eastus2.cloudapp.azure.com
+
+- Aplicación web mediante IP pública:
+  http://172.206.0.165
+
+- Verificación de salud de la API:
+  http://trattoria-bellavista.eastus2.cloudapp.azure.com/health
+
+- Verificación de salud mediante IP:
+  http://172.206.0.165/health
+
+### Repositorio del proyecto
+
+- GitHub:
+  https://github.com/KeinerAstos/restaurante_software
 
 ![Modelo MER de la base de datos](docs/images/modelo-mer.jpeg)
 
