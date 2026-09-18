@@ -15,6 +15,10 @@ La solución está compuesta por:
 - **Control de versiones:** Git y GitHub.
 - **Infraestructura en la nube:** máquina virtual Ubuntu 24.04 en Microsoft Azure.
 
+
+
+![alt text](<WhatsApp Image 2026-09-18 at 4.11.54 PM.jpeg>)
+
 El flujo general de la aplicación es:
 
 ```text
