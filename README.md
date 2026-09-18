@@ -17,7 +17,7 @@ La solución está compuesta por:
 
 
 
-![alt text](<WhatsApp Image 2026-09-18 at 4.11.54 PM.jpeg>)
+![Modelo MER de la base de datos](docs/images/modelo-mer.jpeg)
 
 El flujo general de la aplicación es:
 
